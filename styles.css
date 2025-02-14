@@ -30,6 +30,14 @@ input[type="text"] {
     border-radius: 4px;
 }
 
+input[type="file"] {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
 button {
     padding: 10px 20px;
     border: none;
@@ -54,13 +62,19 @@ li {
     margin-bottom: 5px;
     border-radius: 4px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 li.completed {
     text-decoration: line-through;
     color: #6c757d;
+}
+
+li img {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-top: 10px;
 }
 
 li button {
@@ -70,8 +84,17 @@ li button {
     padding: 5px 10px;
     border-radius: 4px;
     cursor: pointer;
+    margin-left: 5px;
 }
 
-li button:hover {
+li button.edit {
+    background-color: #ffc107;
+}
+
+li button.edit:hover {
+    background-color: #e0a800;
+}
+
+li button.delete:hover {
     background-color: #c82333;
 }
