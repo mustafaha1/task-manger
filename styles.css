@@ -98,3 +98,13 @@ li button.edit:hover {
 li button.delete:hover {
     background-color: #c82333;
 }
+
+/* styles.css */
+#shareTaskBtn {
+    background-color: #17a2b8;
+    margin-top: 10px;
+}
+
+#shareTaskBtn:hover {
+    background-color: #138496;
+}
