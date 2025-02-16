@@ -108,3 +108,12 @@ li button.delete:hover {
 #shareTaskBtn:hover {
     background-color: #138496;
 }
+
+/* styles.css */
+#taskDateTime {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
