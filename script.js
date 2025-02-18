@@ -870,7 +870,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });*/
-
+/*
 document.addEventListener('DOMContentLoaded', function() {
     const taskInput = document.getElementById('taskInput');
     const taskImage = document.getElementById('taskImage');
@@ -952,6 +952,233 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isCompleted) {
             li.classList.add('completed');
         }
+
+        // Add task text
+        if (taskText) {
+            const taskTextElement = document.createElement('span');
+            taskTextElement.textContent = taskText;
+            li.appendChild(taskTextElement);
+        }
+
+        // Add due date and time
+        if (dueDateTime) {
+            const dueDateElement = document.createElement('div');
+            dueDateElement.textContent = `Due: ${new Date(dueDateTime).toLocaleString()}`;
+            li.appendChild(dueDateElement);
+
+            // Set a notification for the due date and time
+            setNotification(taskText, dueDateTime);
+        }
+
+        // Add images if available
+        if (imageFiles && imageFiles.length > 0) {
+            for (const file of imageFiles) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    li.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Add edit button
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.classList.add('edit');
+        editBtn.addEventListener('click', function() {
+            const newTaskText = prompt('Edit your task', taskText);
+            if (newTaskText !== null && newTaskText.trim() !== '') {
+                li.querySelector('span').textContent = newTaskText.trim();
+                saveTasks();
+            }
+        });
+
+        // Add delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.classList.add('delete');
+        deleteBtn.addEventListener('click', function() {
+            taskList.removeChild(li);
+            saveTasks();
+        });
+
+        // Toggle completed status
+        li.addEventListener('click', function() {
+            li.classList.toggle('completed');
+            saveTasks();
+        });
+
+        li.appendChild(editBtn);
+        li.appendChild(deleteBtn);
+        taskList.appendChild(li);
+    }
+
+    function setNotification(taskText, dueDateTime) {
+        const dueDate = new Date(dueDateTime).getTime();
+        const now = new Date().getTime();
+        const timeUntilDue = dueDate - now;
+
+        if (timeUntilDue > 0) {
+            console.log(`Notification set for task: ${taskText} at ${new Date(dueDateTime).toLocaleString()}`);
+            setTimeout(() => {
+                showNotification(taskText);
+            }, timeUntilDue);
+        } else {
+            console.log('Due date is in the past. No notification set.');
+        }
+    }
+
+    function showNotification(taskText) {
+        if (Notification.permission === 'granted') {
+            console.log('Showing notification for task:', taskText);
+            new Notification('Task Due', {
+                body: `Task: ${taskText} is due now!`,
+            });
+        } else {
+            console.log('Notification permission not granted.');
+        }
+    }
+
+    function saveTasks() {
+        const tasks = [];
+        taskList.querySelectorAll('li').forEach(function(li) {
+            const taskText = li.querySelector('span') ? li.querySelector('span').textContent : '';
+            const dueDateTime = li.querySelector('div') ? li.querySelector('div').textContent.replace('Due: ', '') : '';
+            const images = [];
+            li.querySelectorAll('img').forEach(img => images.push(img.src));
+            tasks.push({
+                text: taskText,
+                dueDateTime: dueDateTime,
+                images: images,
+                completed: li.classList.contains('completed')
+            });
+        });
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function loadTasks() {
+        const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        tasks.forEach(function(task) {
+            if (task.images && task.images.length > 0) {
+                const imageFiles = [];
+                task.images.forEach(imageSrc => {
+                    fetch(imageSrc)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const file = new File([blob], 'task-image.png', { type: 'image/png' });
+                            imageFiles.push(file);
+                            if (imageFiles.length === task.images.length) {
+                                addTask(task.text, imageFiles, task.dueDateTime, task.completed);
+                            }
+                        });
+                });
+            } else {
+                addTask(task.text, null, task.dueDateTime, task.completed);
+            }
+        });
+    }
+});*/
+
+document.addEventListener('DOMContentLoaded', function() {
+    const taskInput = document.getElementById('taskInput');
+    const taskImage = document.getElementById('taskImage');
+    const taskDateTime = document.getElementById('taskDateTime');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const shareTaskBtn = document.getElementById('shareTaskBtn');
+    const shareMethod = document.getElementById('shareMethod');
+    const taskList = document.getElementById('taskList');
+
+    // Load tasks from local storage
+    loadTasks();
+
+    addTaskBtn.addEventListener('click', function() {
+        const taskText = taskInput.value.trim();
+        const imageFiles = taskImage.files;
+        const dueDateTime = taskDateTime.value;
+
+        if (taskText !== '' || imageFiles.length > 0) {
+            addTask(taskText, imageFiles, dueDateTime);
+            taskInput.value = '';
+            taskImage.value = ''; // Clear the file input
+            taskDateTime.value = ''; // Clear the date and time input
+            saveTasks();
+        }
+    });
+
+    shareTaskBtn.addEventListener('click', function() {
+        const selectedTasks = getSelectedTasks();
+        if (selectedTasks.length === 0) {
+            alert('No tasks selected!');
+            return;
+        }
+
+        // Convert selected tasks to a readable format
+        let shareText = 'Selected Tasks:\n\n';
+        selectedTasks.forEach((task, index) => {
+            shareText += `${index + 1}. ${task.text} (Due: ${task.dueDateTime || 'No due date'})\n`;
+        });
+
+        const selectedMethod = shareMethod.value;
+
+        switch (selectedMethod) {
+            case 'email':
+                shareViaEmail(shareText);
+                break;
+            case 'social':
+                shareViaSocialMedia(shareText);
+                break;
+            case 'copy':
+                copyToClipboard(shareText);
+                break;
+            default:
+                alert('Invalid sharing method.');
+        }
+    });
+
+    function getSelectedTasks() {
+        const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        const selectedTasks = [];
+        taskList.querySelectorAll('li').forEach((li, index) => {
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                selectedTasks.push(tasks[index]);
+            }
+        });
+        return selectedTasks;
+    }
+
+    function shareViaEmail(shareText) {
+        const subject = encodeURIComponent('Selected Tasks');
+        const body = encodeURIComponent(shareText);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
+    function shareViaSocialMedia(shareText) {
+        const url = encodeURIComponent(window.location.href);
+        const text = encodeURIComponent(shareText);
+        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+    }
+
+    function copyToClipboard(shareText) {
+        navigator.clipboard.writeText(shareText).then(() => {
+            alert('Selected tasks copied to clipboard!');
+        }).catch(() => {
+            alert('Failed to copy selected tasks.');
+        });
+    }
+
+    function addTask(taskText, imageFiles, dueDateTime, isCompleted = false) {
+        const li = document.createElement('li');
+        if (isCompleted) {
+            li.classList.add('completed');
+        }
+
+        // Add checkbox for selection
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        li.appendChild(checkbox);
 
         // Add task text
         if (taskText) {
