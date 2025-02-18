@@ -1080,7 +1080,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });*/
-
+ /*
 document.addEventListener('DOMContentLoaded', function() {
     const taskInput = document.getElementById('taskInput');
     const taskImage = document.getElementById('taskImage');
@@ -1186,6 +1186,163 @@ document.addEventListener('DOMContentLoaded', function() {
         li.appendChild(taskContent);
         li.appendChild(editBtn);
         li.appendChild(deleteBtn);
+        taskList.appendChild(li);
+    }
+
+    // Save tasks to local storage
+    function saveTasks() {
+        const tasks = [];
+        taskList.querySelectorAll('li').forEach(function(li) {
+            const taskText = li.querySelector('span') ? li.querySelector('span').textContent : '';
+            const dueDateTime = li.querySelector('div') ? li.querySelector('div').textContent.replace('Due: ', '') : '';
+            const images = [];
+            li.querySelectorAll('img').forEach(img => images.push(img.src));
+            tasks.push({
+                text: taskText,
+                dueDateTime: dueDateTime,
+                images: images,
+                completed: li.classList.contains('completed')
+            });
+        });
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    // Load tasks from local storage
+    function loadTasks() {
+        const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        tasks.forEach(function(task) {
+            if (task.images && task.images.length > 0) {
+                const imageFiles = [];
+                task.images.forEach(imageSrc => {
+                    fetch(imageSrc)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const file = new File([blob], 'task-image.png', { type: 'image/png' });
+                            imageFiles.push(file);
+                            if (imageFiles.length === task.images.length) {
+                                addTask(task.text, imageFiles, task.dueDateTime, task.completed);
+                            }
+                        });
+                });
+            } else {
+                addTask(task.text, null, task.dueDateTime, task.completed);
+            }
+        });
+    }
+});*/
+
+document.addEventListener('DOMContentLoaded', function() {
+    const taskInput = document.getElementById('taskInput');
+    const taskImage = document.getElementById('taskImage');
+    const taskDateTime = document.getElementById('taskDateTime');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const shareTaskBtn = document.getElementById('shareTaskBtn');
+    const shareMethod = document.getElementById('shareMethod');
+    const taskList = document.getElementById('taskList');
+
+    // Load tasks from local storage
+    loadTasks();
+
+    // Add task on button click
+    addTaskBtn.addEventListener('click', function() {
+        addTaskFromInput();
+    });
+
+    // Add task on pressing Enter
+    taskInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addTaskFromInput();
+        }
+    });
+
+    function addTaskFromInput() {
+        const taskText = taskInput.value.trim();
+        const imageFiles = taskImage.files;
+        const dueDateTime = taskDateTime.value;
+
+        if (taskText !== '' || imageFiles.length > 0) {
+            addTask(taskText, imageFiles, dueDateTime);
+            taskInput.value = '';
+            taskImage.value = ''; // Clear the file input
+            taskDateTime.value = ''; // Clear the date and time input
+            saveTasks();
+        }
+    }
+
+    function addTask(taskText, imageFiles, dueDateTime, isCompleted = false) {
+        const li = document.createElement('li');
+        if (isCompleted) {
+            li.classList.add('completed');
+        }
+
+        // Task content container
+        const taskContent = document.createElement('div');
+        taskContent.classList.add('task-content');
+
+        // Add checkbox for selection
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        taskContent.appendChild(checkbox);
+
+        // Add task text
+        if (taskText) {
+            const taskTextElement = document.createElement('span');
+            taskTextElement.textContent = taskText;
+            taskContent.appendChild(taskTextElement);
+        }
+
+        // Add due date and time
+        if (dueDateTime) {
+            const dueDateElement = document.createElement('div');
+            dueDateElement.textContent = `Due: ${new Date(dueDateTime).toLocaleString()}`;
+            taskContent.appendChild(dueDateElement);
+        }
+
+        // Add images if available
+        if (imageFiles && imageFiles.length > 0) {
+            for (const file of imageFiles) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    taskContent.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Buttons container
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.classList.add('buttons-container');
+
+        // Add edit button
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.classList.add('edit');
+        editBtn.addEventListener('click', function() {
+            const newTaskText = prompt('Edit your task', taskText);
+            if (newTaskText !== null && newTaskText.trim() !== '') {
+                taskContent.querySelector('span').textContent = newTaskText.trim();
+                saveTasks();
+            }
+        });
+
+        // Add delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.classList.add('delete');
+        deleteBtn.addEventListener('click', function() {
+            taskList.removeChild(li);
+            saveTasks();
+        });
+
+        // Append buttons to the buttons container
+        buttonsContainer.appendChild(editBtn);
+        buttonsContainer.appendChild(deleteBtn);
+
+        // Append elements to the task item
+        li.appendChild(taskContent);
+        li.appendChild(buttonsContainer);
         taskList.appendChild(li);
     }
 

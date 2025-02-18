@@ -4,6 +4,7 @@
 /* styles.css */
 
 /* styles.css */
+/* styles.css */
 body {
     font-family: Arial, sans-serif;
     background-color: #6a0dad; /* Purple background */
@@ -89,6 +90,12 @@ li .task-content {
     gap: 10px;
 }
 
+li .buttons-container {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 5px; /* Add gap between buttons */
+}
+
 li button {
     padding: 5px 10px;
     border: none;
@@ -99,12 +106,10 @@ li button {
 
 li button.edit {
     background-color: #ffc107; /* Yellow for edit button */
-    margin-right: auto; /* Push edit button to the left */
 }
 
 li button.delete {
     background-color: #dc3545; /* Red for delete button */
-    margin-left: auto; /* Push delete button to the right */
 }
 
 li button.edit:hover {
