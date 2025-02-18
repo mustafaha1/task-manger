@@ -13,7 +13,14 @@
         <input type="file" id="taskImage" accept="image/*" multiple>
         <input type="datetime-local" id="taskDateTime">
         <button id="addTaskBtn">Add Task</button>
-        <button id="shareTaskBtn">Share Task List</button>
+        <div class="share-options">
+            <button id="shareTaskBtn">Share Task List</button>
+            <select id="shareMethod">
+                <option value="email">Email</option>
+                <option value="social">Social Media</option>
+                <option value="copy">Copy Link</option>
+            </select>
+        </div>
         <ul id="taskList"></ul>
     </div>
     <script src="script.js"></script>

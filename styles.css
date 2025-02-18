@@ -117,3 +117,16 @@ li button.delete:hover {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
+/* styles.css */
+.share-options {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+#shareMethod {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
