@@ -1093,7 +1093,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load tasks from local storage
     loadTasks();
 
+    // Add task on button click
     addTaskBtn.addEventListener('click', function() {
+        addTaskFromInput();
+    });
+
+    // Add task on pressing Enter
+    taskInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addTaskFromInput();
+        }
+    });
+
+    function addTaskFromInput() {
         const taskText = taskInput.value.trim();
         const imageFiles = taskImage.files;
         const dueDateTime = taskDateTime.value;
@@ -1105,68 +1117,6 @@ document.addEventListener('DOMContentLoaded', function() {
             taskDateTime.value = ''; // Clear the date and time input
             saveTasks();
         }
-    });
-
-    shareTaskBtn.addEventListener('click', function() {
-        const selectedTasks = getSelectedTasks();
-        if (selectedTasks.length === 0) {
-            alert('No tasks selected!');
-            return;
-        }
-
-        // Convert selected tasks to a readable format
-        let shareText = 'Selected Tasks:\n\n';
-        selectedTasks.forEach((task, index) => {
-            shareText += `${index + 1}. ${task.text} (Due: ${task.dueDateTime || 'No due date'})\n`;
-        });
-
-        const selectedMethod = shareMethod.value;
-
-        switch (selectedMethod) {
-            case 'email':
-                shareViaEmail(shareText);
-                break;
-            case 'social':
-                shareViaSocialMedia(shareText);
-                break;
-            case 'copy':
-                copyToClipboard(shareText);
-                break;
-            default:
-                alert('Invalid sharing method.');
-        }
-    });
-
-    function getSelectedTasks() {
-        const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-        const selectedTasks = [];
-        taskList.querySelectorAll('li').forEach((li, index) => {
-            const checkbox = li.querySelector('input[type="checkbox"]');
-            if (checkbox && checkbox.checked) {
-                selectedTasks.push(tasks[index]);
-            }
-        });
-        return selectedTasks;
-    }
-
-    function shareViaEmail(shareText) {
-        const subject = encodeURIComponent('Selected Tasks');
-        const body = encodeURIComponent(shareText);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    }
-
-    function shareViaSocialMedia(shareText) {
-        const url = encodeURIComponent(window.location.href);
-        const text = encodeURIComponent(shareText);
-        window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
-    }
-
-    function copyToClipboard(shareText) {
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('Selected tasks copied to clipboard!');
-        }).catch(() => {
-            alert('Failed to copy selected tasks.');
-        });
     }
 
     function addTask(taskText, imageFiles, dueDateTime, isCompleted = false) {
@@ -1175,26 +1125,27 @@ document.addEventListener('DOMContentLoaded', function() {
             li.classList.add('completed');
         }
 
+        // Task content container
+        const taskContent = document.createElement('div');
+        taskContent.classList.add('task-content');
+
         // Add checkbox for selection
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        li.appendChild(checkbox);
+        taskContent.appendChild(checkbox);
 
         // Add task text
         if (taskText) {
             const taskTextElement = document.createElement('span');
             taskTextElement.textContent = taskText;
-            li.appendChild(taskTextElement);
+            taskContent.appendChild(taskTextElement);
         }
 
         // Add due date and time
         if (dueDateTime) {
             const dueDateElement = document.createElement('div');
             dueDateElement.textContent = `Due: ${new Date(dueDateTime).toLocaleString()}`;
-            li.appendChild(dueDateElement);
-
-            // Set a notification for the due date and time
-            setNotification(taskText, dueDateTime);
+            taskContent.appendChild(dueDateElement);
         }
 
         // Add images if available
@@ -1204,25 +1155,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 reader.onload = function(e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
-                    li.appendChild(img);
+                    taskContent.appendChild(img);
                 };
                 reader.readAsDataURL(file);
             }
         }
 
-        // Add edit button
+        // Add edit button (left side)
         const editBtn = document.createElement('button');
         editBtn.textContent = 'Edit';
         editBtn.classList.add('edit');
         editBtn.addEventListener('click', function() {
             const newTaskText = prompt('Edit your task', taskText);
             if (newTaskText !== null && newTaskText.trim() !== '') {
-                li.querySelector('span').textContent = newTaskText.trim();
+                taskContent.querySelector('span').textContent = newTaskText.trim();
                 saveTasks();
             }
         });
 
-        // Add delete button
+        // Add delete button (right side)
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Delete';
         deleteBtn.classList.add('delete');
@@ -1231,43 +1182,14 @@ document.addEventListener('DOMContentLoaded', function() {
             saveTasks();
         });
 
-        // Toggle completed status
-        li.addEventListener('click', function() {
-            li.classList.toggle('completed');
-            saveTasks();
-        });
-
+        // Append elements to the task item
+        li.appendChild(taskContent);
         li.appendChild(editBtn);
         li.appendChild(deleteBtn);
         taskList.appendChild(li);
     }
 
-    function setNotification(taskText, dueDateTime) {
-        const dueDate = new Date(dueDateTime).getTime();
-        const now = new Date().getTime();
-        const timeUntilDue = dueDate - now;
-
-        if (timeUntilDue > 0) {
-            console.log(`Notification set for task: ${taskText} at ${new Date(dueDateTime).toLocaleString()}`);
-            setTimeout(() => {
-                showNotification(taskText);
-            }, timeUntilDue);
-        } else {
-            console.log('Due date is in the past. No notification set.');
-        }
-    }
-
-    function showNotification(taskText) {
-        if (Notification.permission === 'granted') {
-            console.log('Showing notification for task:', taskText);
-            new Notification('Task Due', {
-                body: `Task: ${taskText} is due now!`,
-            });
-        } else {
-            console.log('Notification permission not granted.');
-        }
-    }
-
+    // Save tasks to local storage
     function saveTasks() {
         const tasks = [];
         taskList.querySelectorAll('li').forEach(function(li) {
@@ -1285,6 +1207,7 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }
 
+    // Load tasks from local storage
     function loadTasks() {
         const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
         tasks.forEach(function(task) {
