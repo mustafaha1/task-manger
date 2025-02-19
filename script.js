@@ -1267,16 +1267,19 @@ document.addEventListener('DOMContentLoaded', function() {
         let shareText = 'Task List:\n\n';
         tasks.forEach((task, index) => {
             shareText += `${index + 1}. ${task.text} (Due: ${task.dueDateTime || 'No due date'})\n`;
+            if (task.images && task.images.length > 0) {
+                shareText += `Images: ${task.images.length}\n`;
+            }
         });
 
         const selectedMethod = shareMethod.value;
 
         switch (selectedMethod) {
             case 'email':
-                shareViaEmail(shareText);
+                shareViaEmail(shareText, tasks);
                 break;
             case 'social':
-                shareViaSocialMedia(shareText);
+                shareViaSocialMedia(shareText, tasks);
                 break;
             case 'copy':
                 copyToClipboard(shareText);
@@ -1286,13 +1289,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function shareViaEmail(shareText) {
+    function shareViaEmail(shareText, tasks) {
         const subject = encodeURIComponent('My Task List');
         const body = encodeURIComponent(shareText);
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
     }
 
-    function shareViaSocialMedia(shareText) {
+    function shareViaSocialMedia(shareText, tasks) {
         if (navigator.share) {
             navigator.share({
                 title: 'My Task List',
@@ -1434,16 +1437,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (task.images && task.images.length > 0) {
                 const imageFiles = [];
                 task.images.forEach(imageSrc => {
-                    fetch(imageSrc)
-                        .then(res => res.blob())
-                        .then(blob => {
-                            const file = new File([blob], 'task-image.png', { type: 'image/png' });
-                            imageFiles.push(file);
-                            if (imageFiles.length === task.images.length) {
-                                addTask(task.text, imageFiles, task.dueDateTime, task.completed);
-                            }
-                        });
+                    const img = new Image();
+                    img.src = imageSrc;
+                    imageFiles.push(img);
                 });
+                addTask(task.text, imageFiles, task.dueDateTime, task.completed);
             } else {
                 addTask(task.text, null, task.dueDateTime, task.completed);
             }
