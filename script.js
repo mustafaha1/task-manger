@@ -1255,6 +1255,69 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Share task list
+    shareTaskBtn.addEventListener('click', function() {
+        const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        if (tasks.length === 0) {
+            alert('No tasks to share!');
+            return;
+        }
+
+        // Convert tasks to a readable format
+        let shareText = 'Task List:\n\n';
+        tasks.forEach((task, index) => {
+            shareText += `${index + 1}. ${task.text} (Due: ${task.dueDateTime || 'No due date'})\n`;
+        });
+
+        const selectedMethod = shareMethod.value;
+
+        switch (selectedMethod) {
+            case 'email':
+                shareViaEmail(shareText);
+                break;
+            case 'social':
+                shareViaSocialMedia(shareText);
+                break;
+            case 'copy':
+                copyToClipboard(shareText);
+                break;
+            default:
+                alert('Invalid sharing method.');
+        }
+    });
+
+    function shareViaEmail(shareText) {
+        const subject = encodeURIComponent('My Task List');
+        const body = encodeURIComponent(shareText);
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }
+
+    function shareViaSocialMedia(shareText) {
+        if (navigator.share) {
+            navigator.share({
+                title: 'My Task List',
+                text: shareText,
+            }).catch((error) => {
+                console.error('Error sharing:', error);
+                alert('Failed to share via social media. Please try again.');
+            });
+        } else {
+            alert('Social media sharing is not supported in your browser.');
+        }
+    }
+
+    function copyToClipboard(shareText) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(shareText).then(() => {
+                alert('Task list copied to clipboard!');
+            }).catch(() => {
+                alert('Failed to copy task list to clipboard.');
+            });
+        } else {
+            alert('Clipboard API is not supported in your browser.');
+        }
+    }
+
     function addTaskFromInput() {
         const taskText = taskInput.value.trim();
         const imageFiles = taskImage.files;
