@@ -5,6 +5,7 @@
 
 /* styles.css */
 /* styles.css */
+/* styles.css */
 body {
     font-family: Arial, sans-serif;
     background-color: #6a0dad; /* Purple background */
@@ -27,6 +28,13 @@ body {
 h1 {
     margin-bottom: 20px;
     color: #6a0dad; /* Purple heading */
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #6a0dad; /* Purple label */
 }
 
 input[type="text"],
